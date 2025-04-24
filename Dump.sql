@@ -71,7 +71,7 @@ CREATE TABLE `reb` (
 
 LOCK TABLES `reb` WRITE;
 /*!40000 ALTER TABLE `reb` DISABLE KEYS */;
-INSERT INTO `reb` VALUES (1,'apcflex\\fr-oud','2025-04-19 16:38:51.391655','2025-03-09 03:00:14.000000','rebooted','OUD1CKB008:','mahdi@gmail.com'),(2,'apcflex\\fr-tng','2025-04-19 16:39:12.601937','2025-03-09 03:00:18.000000','rebooted','TNG1OPM001:','mahdi@gmail.com'),(3,'apcflex\\AT-CMN',NULL,'2025-03-08 23:00:17.000000','postponed','CMN1CKB060:',NULL),(4,'apcflex\\at-cmn',NULL,'2025-03-08 23:00:16.000000','postponed','CMN1CKB079:',NULL),(5,'apcflex\\at-cmn','2025-04-22 20:37:01.532211','2025-03-08 23:00:20.000000','rebooted','CMN1CKB081:','tech@example.com'),(6,'apcflex\\af-cmn',NULL,'2025-03-09 01:00:16.000000','postponed','CMN2CKB004:',NULL),(7,'apcflex\\pc-cmn','2025-04-22 19:32:47.634288','2025-03-09 01:00:16.000000','rebooted','CMN2CKB017:','tech@example.com'),(8,'apcflex\\alaraki.sa','2025-04-23 01:51:41.089786','2025-03-09 01:00:22.000000','rebooted','CMN2CKB041:','tech2@example.com'),(9,'apcflex\\brs-vil',NULL,'2025-03-08 23:00:18.000000','postponed','VIL1BDM001:',NULL),(10,'apcflex\\brs-esu',NULL,'2025-03-08 23:00:19.000000','postponed','ESU1BDM001:',NULL);
+INSERT INTO `reb` VALUES (1,'apcflex\\fr-oud','2025-04-19 16:38:51.391655','2025-03-09 03:00:14.000000','rebooted','OUD1CKB008','mahdi@gmail.com'),(2,'apcflex\\fr-tng','2025-04-19 16:39:12.601937','2025-03-09 03:00:18.000000','rebooted','TNG1OPM001','mahdi@gmail.com'),(3,'apcflex\\AT-CMN',NULL,'2025-03-08 23:00:17.000000','postponed','CMN1CKB060',NULL),(4,'apcflex\\at-cmn',NULL,'2025-03-08 23:00:16.000000','postponed','CMN1CKB079',NULL),(5,'apcflex\\at-cmn','2025-04-22 20:37:01.532211','2025-03-08 23:00:20.000000','rebooted','CMN1CKB081','tech@example.com'),(6,'apcflex\\af-cmn',NULL,'2025-03-09 01:00:16.000000','postponed','CMN2CKB004',NULL),(7,'apcflex\\pc-cmn','2025-04-22 19:32:47.634288','2025-03-09 01:00:16.000000','rebooted','CMN2CKB017','tech@example.com'),(8,'apcflex\\alaraki.sa','2025-04-23 01:51:41.089786','2025-03-09 01:00:22.000000','rebooted','CMN2CKB041','tech2@example.com'),(9,'apcflex\\brs-vil',NULL,'2025-03-08 23:00:18.000000','postponed','VIL1BDM001',NULL),(10,'apcflex\\brs-esu',NULL,'2025-03-08 23:00:19.000000','postponed','ESU1BDM001',NULL);
 /*!40000 ALTER TABLE `reb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -98,7 +98,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('mahdi@gmail.com','mahdi','123','tech','casa'),('manager@example.com','admin','pass','manager',''),('tech@example.com','technician','pass','techinician','CMN1CKB081:'),('tech2@example.com','ayoub','pass','technician','CMN2CKB041:');
+INSERT INTO `user` VALUES ('mahdi@gmail.com','mahdi','123','tech','casa'),('manager@example.com','admin','pass','manager',''),('tech@example.com','mark','pass','techinician','CMN1CKB081:'),('tech2@example.com','ayoub','john','technician','CMN2CKB041:');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
