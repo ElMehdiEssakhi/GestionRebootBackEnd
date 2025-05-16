@@ -2,78 +2,150 @@ package com.toto.service.impl;
 
 
 
-import com.toto.entity.Reb;
-import com.toto.repository.RebRepository;
-import com.toto.repository.UserRepository;
+import com.toto.entity.Machine;
+import com.toto.entity.RebootLog;
+import com.toto.repository.MachineRepository;
+import com.toto.repository.RebootLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
 public class parseSchedule {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     @Autowired
-    private RebRepository rebRepository;
+    private RebootLogRepository rebRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Scheduled(fixedRate = 500000)
+    private MachineRepository machineRepository;
+    @Autowired
+    private machineService machineService;
+    @Autowired
+    private mailingService mailingService;
+
+    @Value("${log.drop.path}")
+    private String logDropPath;
+
+    @Scheduled(cron = "0 0 7 * * ?")
     public void parseFolder(){
-        Path logFolder = Paths.get("/home/mehdi/Downloads/alert/test");
-        Path parsedDir = Paths.get("/home/mehdi/Downloads/alert/parsed");
+        Path logFolder = Paths.get(logDropPath);
+        Path parsedDir = Paths.get("./logs/parsed");
         try(Stream<Path> files = Files.walk(logFolder)){
-            files.filter(Files::isRegularFile).forEach(path -> {parseFile(path,parsedDir);});
+            files.filter(Files::isRegularFile).forEach(path -> {
+                String fileName = path.getFileName().toString();
+                if (fileName.matches("Reboot_logs.*\\.txt")){
+                    parseFileReb(path);
+                }else if (fileName.matches("Uptime_memoryCheck_.*\\.txt")){
+                    parseFileUp(path);
+                }else {
+                    System.out.println("Unknown file type: " + fileName);
+                }
+            });
         }catch(IOException e){
             e.printStackTrace();
         }
     }
 
-    public void parseFile(Path filePath,Path parsedDir) {
+    public void parseFileReb(Path filePath) {
         System.out.println("Parsing reboot log...");
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try (Stream<String> lines = Files.lines(filePath)) {
             lines.forEach(line -> {
                 try {
                     String[] words = line.trim().split("\\s+");
-                    if (words.length >= 11 && "A".equals(words[3])) {
-                        Reb reb = new Reb();
-
-                        reb.setZoneId(words[0].replace(":", ""));
-
+                    if (words.length >= 13 && "A".equals(words[3])) {
+                        RebootLog reboot = new RebootLog();
                         // Parse date and time
                         String scriptExTime = words[1] + " " + words[2];
-                        LocalDateTime dateTime = LocalDateTime.parse(scriptExTime, formatter);
-                        reb.setPostponedRebootTime(dateTime);
-
-                        reb.setMachine(words[10].replace("'", ""));
-                        reb.setStatus("postponed");
-
-                        rebRepository.save(reb);
+                        LocalDateTime postOrAutoTime = LocalDateTime.parse(scriptExTime, formatter);
+                        Machine machine = machineRepository.findByName(words[0].replace(":", ""));
+                        RebootLog pendingFromYesterday = rebRepository.wasPendingYesterday(machine, LocalDate.now().minusDays(1));
+                        if ( "but".equals(words[8])){
+                            if(pendingFromYesterday != null){
+                                pendingFromYesterday.setStatus("alert");
+                                rebRepository.save(pendingFromYesterday);
+                                machineService.increaseAlertCount(machine);
+                                //send mail
+                                mailingService.sendSimpleEmail("elmehdiessakhi17@gmail.com","Alert a pending reboot", machine.getName()+" need intervention");
+                                return;
+                            }
+                            reboot.setMachine(machine);
+                            reboot.setStatus("pending");
+                            reboot.setRebootPostponedAt(postOrAutoTime);
+                            reboot.setSite(words[0].substring(0, 3));
+                            rebRepository.save(reboot);
+                        } else if ("No".equals(words[8])){
+                            if(pendingFromYesterday==null){
+                                return;
+                            }
+                            pendingFromYesterday.setStatus("auto");
+                            pendingFromYesterday.setRebootedAt(postOrAutoTime);
+                            machineService.increaseAutoCount(machine);
+                            rebRepository.save(pendingFromYesterday);
+                        }
                     }
                 } catch (Exception e) {
                     System.err.println("Failed to process line: " + line);
-                    e.printStackTrace();
-                }
-                try {
-                    Path targetPath = parsedDir.resolve(filePath.getFileName());
-                    Files.move(filePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("Moved parsed file to: " + targetPath);
-                } catch (IOException e) {
-                    System.err.println("Failed to move file: " + filePath);
                     e.printStackTrace();
                 }
             });
         } catch (IOException e) {
             System.err.println("Failed to read log file.");
             e.printStackTrace();
+            return;
+        }
+        try {
+            Files.deleteIfExists(filePath);
+            System.out.println("deleted parsed file");
+        } catch (IOException e) {
+            System.err.println("Failed to delete file: " + filePath);
+            e.printStackTrace();
         }
     }
+    public void parseFileUp(Path filePath) {
+        System.out.println("Parsing reboot log...");
+        try (Stream<String> lines = Files.lines(filePath)) {
+            lines.forEach(line -> {
+                try {
+                    String[] words = line.trim().split("\\s+");
+                    if (words.length >= 23 && "A".equals(words[19])) {
+                        RebootLog reboot = new RebootLog();
+                        Machine machine = machineRepository.findByName(words[0].replace(":", ""));
+                        reboot.setMachine(machine);
+                        reboot.setSite(words[0].substring(0, 3));
+                        // Parse date and time
+                        String scriptExTime = words[1] + " " + words[2];
+                        LocalDateTime dateTime = LocalDateTime.parse(scriptExTime, formatter);
+                        reboot.setRebootPostponedAt(dateTime);
+                        reboot.setStatus("pending");
+                        rebRepository.save(reboot);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to process line: " + line);
+                    e.printStackTrace();
+                }
+            });
+        } catch (IOException e) {
+            System.err.println("Failed to read log file.");
+            e.printStackTrace();
+            return;
+        }
+        try {
+            Files.deleteIfExists(filePath);
+            System.out.println("deleted parsed file");
+        } catch (IOException e) {
+            System.err.println("Failed to delete file: " + filePath);
+            e.printStackTrace();
+        }
+    }
+
 }
