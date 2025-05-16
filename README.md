@@ -25,13 +25,13 @@ A web application built with Spring Boot and MySQL, designed to [ manage reboot 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/ElMehdiEssakhi/GesRebootApp.git
-cd GesRebootApp
+git clone https://github.com/ElMehdiEssakhi/GestionRebootBackEnd
+cd GestionRebootBackEnd
 ```
 ### 2. Set Up MySQL DB
 
 - Create a new database in MySQL (e.g., dbAlert) .
-- Execute the SQL dump to create tables and insert sample data:
+- Execute the SQL dump to create tables:
 ```bash
 mysql -u your_user -p dbAlert < Dump.sql
 ```
