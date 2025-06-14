@@ -33,7 +33,9 @@ cd GestionRebootBackEnd
 - Create a new database in MySQL (e.g., dbAlert) .
 - Execute the SQL dump to create tables:
 ```bash
-mysql -u your_user -p dbAlert < Dump.sql
+mysql -u your_user -p dbAlert < tableclone.sql
+mysql -u your_user -p dbAlert < machineclone.sql
+mysql -u your_user -p dbAlert < usersclone.sql
 ```
 ### 3.Configure Application Properties
 
@@ -45,7 +47,7 @@ Edit src/main/resources/application.properties with your database credentials:
 ```bash
 mvn clean install
 ```
-- Run the app
+- Run the app with the name you set in pom.xml
 ```bash
-java -jar your-app-name.jar
+java -jar gesReboot-1.0.0-SNAPSHOT.jar
 ```
