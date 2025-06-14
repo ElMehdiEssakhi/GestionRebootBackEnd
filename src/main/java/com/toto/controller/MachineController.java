@@ -23,6 +23,10 @@ public class MachineController {
     public void addMachine(@RequestBody Machine machine) {
         machineService.addMachine(machine);
     }
+    @DeleteMapping("/delete")
+    public void deleteMachine(@RequestBody Machine machine) {
+        machineService.deleteMachine(machine);
+    }
 
     @GetMapping("/getSumAuto")
     public Long sumAutoReboots() {

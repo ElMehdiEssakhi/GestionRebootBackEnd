@@ -14,11 +14,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
@@ -36,10 +35,10 @@ public class parseSchedule {
     @Value("${log.drop.path}")
     private String logDropPath;
 
-    @Scheduled(cron = "0 0 7 * * ?")
+    @Scheduled(cron = "0 */2 * * * ?")//@Scheduled(cron = "0 0 7 * * ?")
     public void parseFolder(){
+        System.out.println("ra");
         Path logFolder = Paths.get(logDropPath);
-        Path parsedDir = Paths.get("./logs/parsed");
         try(Stream<Path> files = Files.walk(logFolder)){
             files.filter(Files::isRegularFile).forEach(path -> {
                 String fileName = path.getFileName().toString();
@@ -68,6 +67,10 @@ public class parseSchedule {
                         String scriptExTime = words[1] + " " + words[2];
                         LocalDateTime postOrAutoTime = LocalDateTime.parse(scriptExTime, formatter);
                         Machine machine = machineRepository.findByName(words[0].replace(":", ""));
+                        if (machine == null) {
+                            System.err.println("Machine not found for name: " + words[0]);
+                            return;
+                        }
                         RebootLog pendingFromYesterday = rebRepository.wasPendingYesterday(machine, LocalDate.now().minusDays(1));
                         if ( "but".equals(words[8])){
                             if(pendingFromYesterday != null){
@@ -75,7 +78,9 @@ public class parseSchedule {
                                 rebRepository.save(pendingFromYesterday);
                                 machineService.increaseAlertCount(machine);
                                 //send mail
-                                mailingService.sendSimpleEmail("elmehdiessakhi17@gmail.com","Alert a pending reboot", machine.getName()+" need intervention");
+                                String siteCode = words[0].substring(0, 3).toUpperCase();
+                                String recipientEmail = getEmailForSite(siteCode);
+                                mailingService.sendSimpleEmail(recipientEmail,"Alert a pending reboot", machine.getName()+" need intervention");
                                 return;
                             }
                             reboot.setMachine(machine);
@@ -120,6 +125,10 @@ public class parseSchedule {
                     if (words.length >= 23 && "A".equals(words[19])) {
                         RebootLog reboot = new RebootLog();
                         Machine machine = machineRepository.findByName(words[0].replace(":", ""));
+                        if (machine == null) {
+                            System.err.println("Machine not found for name: " + words[0]);
+                            return;
+                        }
                         reboot.setMachine(machine);
                         reboot.setSite(words[0].substring(0, 3));
                         // Parse date and time
@@ -147,5 +156,34 @@ public class parseSchedule {
             e.printStackTrace();
         }
     }
+
+    private static final Map<String, String> siteToEmailMap = Map.ofEntries(
+            Map.entry("RAK", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("ESU", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("VIL", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("OZZ", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("EUN", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("BEM", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("GLN", "Abderlhakim.ettijani@sita.aero"),
+            Map.entry("ERH", "Abderlhakim.ettijani@sita.aero"),
+
+            Map.entry("CMN", "ahmed.laraki@sita.aero"),
+            Map.entry("AGA", "abdelkarim.dikouk@sita.aero"),
+
+            Map.entry("RBA", "zakariae.sabri@sita.aero"),
+            Map.entry("FEZ", "zakariae.sabri@sita.aero"),
+            Map.entry("OUD", "zakariae.sabri@sita.aero"),
+            Map.entry("NDR", "zakariae.sabri@sita.aero"),
+            Map.entry("TNG", "zakariae.sabri@sita.aero"),
+            Map.entry("AHU", "zakariae.sabri@sita.aero"),
+            Map.entry("TTU", "zakariae.sabri@sita.aero")
+    );
+
+    private String getEmailForSite(String siteCode) {
+        return siteToEmailMap.get(siteCode.toUpperCase());
+
+    }
+
+
 
 }

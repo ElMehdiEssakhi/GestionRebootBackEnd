@@ -19,6 +19,10 @@ public class TechController {
     public List<Technician> getTechs(){
         return techService.getTechs();
     }
+    @GetMapping("/getBySite")
+    public List<Technician> getTechsBySite(String site){
+        return techService.getTechsBySite(site);
+    }
     @PostMapping("/add")
     public void addTech(@RequestBody Technician technician){
         techService.addTech(technician);

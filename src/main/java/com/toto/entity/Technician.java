@@ -13,6 +13,8 @@ public class Technician {
 
     private Long rebootCount;
 
+    private String site;
+
     public Long getId() {
         return id;
     }
@@ -35,5 +37,13 @@ public class Technician {
 
     public void setRebootCount(Long rebootCount) {
         this.rebootCount = rebootCount;
+    }
+
+    public String getSite() {
+        return site;
+    }
+
+    public void setSite(String site) {
+        this.site = site;
     }
 }

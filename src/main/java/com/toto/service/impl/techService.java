@@ -8,6 +8,7 @@ import java.util.List;
 @Service
 public interface techService {
     List<Technician> getTechs();
+    List<Technician> getTechsBySite(String site);
     void addTech(Technician technician);
     void deleteTech(Technician technician);
     void increaseRebootCount(Technician technician);

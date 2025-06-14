@@ -18,6 +18,11 @@ public class techServiceImp implements techService {
     }
 
     @Override
+    public List<Technician> getTechsBySite(String site) {
+        return technicianRepository.findAllBySite(site);
+    }
+
+    @Override
     public void addTech(Technician technician) {
         technicianRepository.save(technician);
     }
